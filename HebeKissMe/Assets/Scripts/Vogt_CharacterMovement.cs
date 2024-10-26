@@ -1,56 +1,25 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.InputSystem;
+ï»¿using UnityEngine;
 
-public class Vogt_CharacterMovement : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
-    [SerializeField] private float _speed = 10f;
-    [SerializeField] private float _damping = 0.1f;
-    [SerializeField] private float _jumpForce = 1f;
+    public float speed = 5f; // ç§»å‹•é€Ÿåº¦
+    private Rigidbody2D rb;
+    private float moveInput;
 
-    private Vector2 _moveInput;
-    private Vector2 _smoothMovent;
-    private Vector2 _smoothVelocity;
-    private Rigidbody2D _rigidbody;
-    private SpriteRenderer _spriteRenderer;
-
-    private void Start()
+    void Start()
     {
-        _rigidbody = GetComponent<Rigidbody2D>();
-        _spriteRenderer = GetComponent<SpriteRenderer>();
+        rb = GetComponent<Rigidbody2D>(); // å–å¾— Rigidbody2D çµ„ä»¶
     }
 
-    // ¸õÅDÅŞ¿è
-    private void Jump()
+    void Update()
     {
-        Debug.Log("Jumping"); // ¿é¥X¸õÅDªº°T®§
-        _rigidbody.velocity = new Vector2(_rigidbody.velocity.x, _jumpForce);
+        // å–å¾—æ°´å¹³è¼¸å…¥ (A, D éµæˆ–å·¦ã€å³æ–¹å‘éµ)
+        moveInput = Input.GetAxis("Horizontal");
     }
 
-    private void SetMoveInput()
+    void FixedUpdate()
     {
-        _smoothMovent = Vector2.SmoothDamp(_smoothMovent, _moveInput, ref _smoothVelocity, _damping);
-        _rigidbody.velocity = new Vector2(_smoothMovent.x * _speed, _rigidbody.velocity.y);  // ««ª½³t«×«O«ù¤£ÅÜ
-    }
-
-    private void FixedUpdate()
-    {
-        SetMoveInput();
-    }
-
-    public void OnMove(InputValue value)
-    {
-        _moveInput = value.Get<Vector2>();
-    }
-
-    // ¸õÅD¿é¤JÅŞ¿è
-    public void OnJump(InputValue value)
-    {
-        if (value.isPressed)  // ·í«ö¤U¸õÅD«öÁä®É
-        {
-            Debug.Log("Jump Pressed"); // ¿é¥X«ö¤U¸õÅD«öÁäªº°T®§
-            Jump();
-        }
+        // ç§»å‹•è§’è‰²
+        rb.velocity = new Vector2(moveInput * speed, rb.velocity.y);
     }
 }
