@@ -9,6 +9,7 @@ public class MapLoader : MonoBehaviour
     public GameObject tilemapSegment3;
     void Start()
     {
+        //tilemapSegment1.SetActive(false);
         tilemapSegment2.SetActive(false);
         tilemapSegment3.SetActive(false);
     }
@@ -21,6 +22,7 @@ public class MapLoader : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        Debug.Log("123");
         // 確認碰撞的是玩家
         if (other.CompareTag("Player"))
         {
