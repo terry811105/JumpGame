@@ -637,7 +637,8 @@ MonoBehaviour:
   playerObject: {fileID: 385389353}
   controlledObject: {fileID: 0}
   hp: 0
-  switchCooldown: 1
+  collidedAnimal: {fileID: 0}
+  switchCooldown: 0.3
   switchTimer: 0
   switchBackCooldown: 3
   switchBackTimer: 0
