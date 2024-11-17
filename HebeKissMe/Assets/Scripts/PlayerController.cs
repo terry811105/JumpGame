@@ -117,7 +117,7 @@ public class GameControllerScripts : MonoBehaviour
             controlledObject = playerObject; // 切換控制對象回玩家
 
             switchBackTimer = switchBackCooldown; // 重置切換回玩家的冷卻計時器
-
+            collidedAnimal = null; // 重置碰撞的動物
             Debug.Log("控制切換回玩家：" + controlledObject.name);
         }
     }
