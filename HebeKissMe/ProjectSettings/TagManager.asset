@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Ground
   - Animal
+  - Rabbit
   layers:
   - Default
   - TransparentFX

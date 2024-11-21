@@ -59,11 +59,25 @@ public class GameControllerScripts : MonoBehaviour
 
     void PlayerInput()
     {
-        // 檢測跳躍輸入
-        if (Input.GetKeyDown(KeyCode.Space) && Mathf.Abs(controlledObject.GetComponent<Rigidbody2D>().velocity.y) < 0.01f)
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            controlledObject.GetComponent<Rigidbody2D>().AddForce(Vector2.up * 10f, ForceMode2D.Impulse);
-            Debug.Log("跳躍：" + controlledObject.name);
+            Rigidbody2D rb = controlledObject.GetComponent<Rigidbody2D>();
+            switch (controlledObject.name)
+            {
+                case "Sour":
+                    PlayerJump(rb);
+                    break;
+                case "Rabbit":
+                    RabbitJump(rb);
+                    break;
+                case "Bird":
+                    //BirdJump(rb);
+                    break;
+                // 可以在這裡添加更多動物的跳躍行為
+                default:
+                    Debug.Log("未知動物，無法跳躍");
+                    break;
+            }
         }
     }
 
@@ -149,4 +163,29 @@ public class GameControllerScripts : MonoBehaviour
             animalSwitchTimer = animalSwitchCooldown; // 重置動物之間的切換冷卻計時器
         }
     }
+    private void PlayerJump(Rigidbody2D rb)
+    {
+        if (Mathf.Abs(rb.velocity.y) < 0.01f)
+        {
+            rb.AddForce(Vector2.up * 10f, ForceMode2D.Impulse);
+            Debug.Log("玩家跳躍");
+        }
+    }
+
+    private void RabbitJump(Rigidbody2D rb)
+    {
+        bool canDoubleJump = Mathf.Abs(rb.velocity.y) > 0.01f;
+        if (canDoubleJump)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, 0);
+            rb.AddForce(Vector2.up * 5f, ForceMode2D.Impulse);
+            Debug.Log("兔子二段跳");
+        }
+        else
+        {
+            rb.AddForce(Vector2.up * 5f, ForceMode2D.Impulse);
+            Debug.Log("兔子第一次跳躍");
+        }
+    }
 }
+
