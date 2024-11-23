@@ -20,7 +20,7 @@ public class MapTrigger : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-             Debug.Log("player enter");
+             Debug.Log("player enter, index: " + segmentIndex);
             generator.HandleSegmentTransition(segmentIndex, triggersForward);
         } 
         else 

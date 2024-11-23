@@ -68,12 +68,26 @@ public class MapCreateManager : MonoBehaviour
     {
         
         InitializeMap();
+        
     }
 
     void InitializeMap()
     {
         SplitMapIntoSegments();
         StartCoroutine(LoadInitialSegments());
+    }
+
+    void printMapSegment()
+    {
+        Debug.Log("mapSegments.count:" + mapSegments.Count);
+        for (int i = 0; i < mapSegments.Count; i++)
+        {
+            Debug.Log("mapSegments 第" + i + "個 mapSegments map key: " + mapSegments[i]);
+        }
+        foreach (var key in mapSegments.Keys)
+        {
+            Debug.Log("mapSegments contains key: " + key);
+        }
     }
 
     IEnumerator LoadInitialSegments()
@@ -85,8 +99,10 @@ public class MapCreateManager : MonoBehaviour
 
     void SplitMapIntoSegments()
     {
+        // 向上取整數
         int totalSegments = Mathf.CeilToInt((float)fullMapData[0].Length / segmentWidth);
-
+        Debug.Log("totalSegments: " +totalSegments);
+        Debug.Log("fullMapData.Length: " + fullMapData[0].Length + ", segmentWidth: " + segmentWidth);
         for (int i = 0; i < totalSegments; i++)
         {
             string[] segmentData = new string[fullMapData.Length];
@@ -115,12 +131,14 @@ public class MapCreateManager : MonoBehaviour
                     segmentData[y] = new string('0', segmentWidth);
                 }
             }
-
+            Debug.Log("init MapSegment 第" + i + "個");
             mapSegments[i] = new MapSegment(
                 segmentData,
                 new Vector2(i * segmentWidth, 0)
             );
         }
+
+        printMapSegment();
     }
 
     IEnumerator LoadSegmentWithTransition(int segmentIndex, bool isPreload = false)
@@ -241,8 +259,11 @@ public class MapCreateManager : MonoBehaviour
         collider.isTrigger = true;
         collider.size = new Vector2(1f, tilemap.size.y);
 
+        Debug.Log($"Creating trigger for segment {segmentIndex}, position.x: {position.x}, triggersForward: {position.x < segmentIndex * segmentWidth}");
+        bool isTriggerAtEnd = position.x == (segmentIndex + 1) * segmentWidth - 1; // 判斷是否位於段落尾部
+        bool triggersForward = isTriggerAtEnd;
         MapTrigger triggerScript = trigger.AddComponent<MapTrigger>();
-        triggerScript.Initialize(this, segmentIndex, position.x < segmentIndex * segmentWidth);
+        triggerScript.Initialize(this, segmentIndex, triggersForward);
 
         mapSegments[segmentIndex].trigger = trigger;
     }
@@ -298,6 +319,7 @@ public class MapCreateManager : MonoBehaviour
 
     public void HandleSegmentTransition(int triggerSegmentIndex, bool movingForward)
     {
+        printMapSegment();
         int targetSegmentIndex = movingForward ? triggerSegmentIndex + 1 : triggerSegmentIndex - 1;
         
         if (mapSegments.ContainsKey(targetSegmentIndex) && !isTransitioning)
@@ -307,7 +329,7 @@ public class MapCreateManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("HandleSegmentTransition don't work, " + isTransitioning + ", contain:" + mapSegments.ContainsKey(targetSegmentIndex));
+            Debug.Log("HandleSegmentTransition don't work, " + isTransitioning + ", contain:" + mapSegments.ContainsKey(targetSegmentIndex) + ", triggerSegmentIndex: " + triggerSegmentIndex + "targetSegmentIndex: " + targetSegmentIndex);
         }
     }
 
