@@ -5,6 +5,7 @@ using UnityEngine.Tilemaps;
 
 public class TilemapGenerator : MonoBehaviour
 {
+    [Header("基本設置")]
     [SerializeField] private Tilemap tilemap;
     [SerializeField] private TileBase groundTile;    // 1: 地板
     // [SerializeField] private TileBase treeTile;      // 2: 樹木
