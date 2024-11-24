@@ -19,7 +19,8 @@ public class GameControllerScripts : MonoBehaviour
 
     private bool rabbitCanJump = true; // 追蹤兔子是否可以跳躍
     private int rabbitJumpCount = 0;   // 追蹤兔子跳躍次數
-
+    public float playerJumpforce = 3f;
+    public float rabbitJumpforce = 5f;
 
     void Start()
     {
@@ -44,7 +45,14 @@ public class GameControllerScripts : MonoBehaviour
         else
         {
             // 計時結束，重置碰撞的動物
-            collidedAnimal = null;
+            if (collidedAnimal !=null)
+            {
+
+                collidedAnimal = null;
+
+
+            }
+
 
         }
 
@@ -131,8 +139,14 @@ public class GameControllerScripts : MonoBehaviour
         
         controlledObject = animalObject; // 動物附身到動物
         Debug.Log("附身到動物：" + controlledObject.name);
-        
-        collidedAnimal = null; // 重置碰撞的動物
+
+        if (collidedAnimal !=null)
+        {
+
+            collidedAnimal = null;
+
+
+        }
         animalSwitchTimer = animalSwitchCooldown; // 重置動物之間的切換冷卻計時器
     }
 
@@ -147,12 +161,21 @@ public class GameControllerScripts : MonoBehaviour
 
             playerObject.transform.position = animalPosition; // 更新玩家位置
             playerRb.velocity = animalVelocity; // 更新玩家動量
-
+            
             playerObject.SetActive(true); // 玩家顯示，當按 R 回復控制玩家
             controlledObject = playerObject; // 切換控制對象回玩家
 
             switchBackTimer = switchBackCooldown; // 重置切回玩家的冷卻計時器
-            collidedAnimal = null; // 重置碰撞的動物
+
+
+            if (collidedAnimal != null)
+            {
+
+                collidedAnimal = null;
+
+
+            }
+            
             Debug.Log("控制切換回玩家：" + controlledObject.name);
         }
     }
@@ -174,7 +197,7 @@ public class GameControllerScripts : MonoBehaviour
     {
         if (Mathf.Abs(rb.velocity.y) < 0.01f)
         {
-            rb.AddForce(Vector2.up * 1f, ForceMode2D.Impulse);
+            rb.AddForce(Vector2.up * playerJumpforce, ForceMode2D.Impulse);
             Debug.Log("玩家跳躍");
         }
     }
@@ -193,14 +216,14 @@ public class GameControllerScripts : MonoBehaviour
         {
             if (rabbitJumpCount < 1) // 第一次跳躍
             {
-                rb.AddForce(Vector2.up * 5f, ForceMode2D.Impulse);
+                rb.AddForce(Vector2.up * rabbitJumpforce, ForceMode2D.Impulse);
                 rabbitJumpCount++;
                 Debug.Log("兔子第一次跳躍");
             }
             else if (rabbitJumpCount == 1 && Mathf.Abs(rb.velocity.y) > 0.01f) // 第二次跳躍（需要在空中）
             {
                 rb.velocity = new Vector2(rb.velocity.x, 0); // 重置垂直速度
-                rb.AddForce(Vector2.up * 5f, ForceMode2D.Impulse);
+                rb.AddForce(Vector2.up * rabbitJumpforce, ForceMode2D.Impulse);
                 rabbitJumpCount++;
                 Debug.Log("兔子第二次跳躍");
             }
