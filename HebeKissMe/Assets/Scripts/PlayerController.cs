@@ -17,6 +17,10 @@ public class GameControllerScripts : MonoBehaviour
     public float animalSwitchCooldown = 3f; // 動物之間切換的冷卻時間
     public float animalSwitchTimer = 0f; // 動物之間切換的冷卻計時器
 
+    private bool rabbitCanJump = true; // 追蹤兔子是否可以跳躍
+    private int rabbitJumpCount = 0;   // 追蹤兔子跳躍次數
+
+
     void Start()
     {
         // 獲取玩家的 Rigidbody2D 和 Collider2D
@@ -55,6 +59,8 @@ public class GameControllerScripts : MonoBehaviour
         {
             animalSwitchTimer -= Time.deltaTime;
         }
+
+        
     }
 
     void PlayerInput()
@@ -68,6 +74,7 @@ public class GameControllerScripts : MonoBehaviour
                     PlayerJump(rb);
                     break;
                 case "Rabbit":
+
                     RabbitJump(rb);
                     break;
                 case "Bird":
@@ -167,25 +174,38 @@ public class GameControllerScripts : MonoBehaviour
     {
         if (Mathf.Abs(rb.velocity.y) < 0.01f)
         {
-            rb.AddForce(Vector2.up * 10f, ForceMode2D.Impulse);
+            rb.AddForce(Vector2.up * 1f, ForceMode2D.Impulse);
             Debug.Log("玩家跳躍");
         }
     }
 
     private void RabbitJump(Rigidbody2D rb)
     {
-        bool canDoubleJump = Mathf.Abs(rb.velocity.y) > 0.01f;
-        if (canDoubleJump)
+        if (controlledObject.name == "Rabbit" && Mathf.Abs(rb.velocity.y) < 0.01f)
         {
-            rb.velocity = new Vector2(rb.velocity.x, 0);
-            rb.AddForce(Vector2.up * 5f, ForceMode2D.Impulse);
-            Debug.Log("兔子二段跳");
+            rabbitCanJump = true; // 允許再次跳躍
+            rabbitJumpCount = 0; // 重置跳躍次數
+            Debug.Log("兔子觸地，跳躍重置");
         }
-        else
+
+        // 判斷兔子是否可以跳躍
+        if (rabbitCanJump)
         {
-            rb.AddForce(Vector2.up * 5f, ForceMode2D.Impulse);
-            Debug.Log("兔子第一次跳躍");
+            if (rabbitJumpCount < 1) // 第一次跳躍
+            {
+                rb.AddForce(Vector2.up * 5f, ForceMode2D.Impulse);
+                rabbitJumpCount++;
+                Debug.Log("兔子第一次跳躍");
+            }
+            else if (rabbitJumpCount == 1 && Mathf.Abs(rb.velocity.y) > 0.01f) // 第二次跳躍（需要在空中）
+            {
+                rb.velocity = new Vector2(rb.velocity.x, 0); // 重置垂直速度
+                rb.AddForce(Vector2.up * 5f, ForceMode2D.Impulse);
+                rabbitJumpCount++;
+                Debug.Log("兔子第二次跳躍");
+            }
         }
     }
+
 }
 
