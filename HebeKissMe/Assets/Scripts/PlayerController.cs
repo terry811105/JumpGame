@@ -5,11 +5,11 @@ using UnityEngine;
 public class GameControllerScripts : MonoBehaviour
 {
     public GameObject playerObject; // 玩家物件的引用
-    private Rigidbody2D playerRb;   // 玩家剛體
+    private Rigidbody2D playerRb;   // 玩家刚體
     private Collider2D playerCollider; // 玩家碰撞體
     public GameObject controlledObject; // 當前控制的物體
     public int hp = 0;
-    public GameObject collidedAnimal = null; // 當前碰撞的動物物體
+    public GameObject collidedAnimal = null; // 當前碰撞的動物物件
     public float switchCooldown = 1f; // 切換動物的時限
     public float switchTimer = 0f; // 切換動物的計時器
     public float switchBackCooldown = 3f; // 切換回玩家後的冷卻時間
@@ -17,10 +17,13 @@ public class GameControllerScripts : MonoBehaviour
     public float animalSwitchCooldown = 3f; // 動物之間切換的冷卻時間
     public float animalSwitchTimer = 0f; // 動物之間切換的冷卻計時器
 
-    private bool rabbitCanJump = true; // 追蹤兔子是否可以跳躍
-    private int rabbitJumpCount = 0;   // 追蹤兔子跳躍次數
+    private bool rabbitCanJump = true; // 追蹤兔子是否可以跳跃
+    private int rabbitJumpCount = 0;   // 追蹤兔子跳跃次數
     public float playerJumpforce = 3f;
     public float rabbitJumpforce = 5f;
+
+    public Transform cameraTransform; // 鏡頭的引用
+    public Vector3 cameraOffset = new Vector3(0, 0, -10); // 鏡頭與玩家的偏移
 
     void Start()
     {
@@ -45,15 +48,10 @@ public class GameControllerScripts : MonoBehaviour
         else
         {
             // 計時結束，重置碰撞的動物
-            if (collidedAnimal !=null)
+            if (collidedAnimal != null)
             {
-
                 collidedAnimal = null;
-
-
             }
-
-
         }
 
         // 更新切換回玩家後的冷卻計時器
@@ -68,7 +66,8 @@ public class GameControllerScripts : MonoBehaviour
             animalSwitchTimer -= Time.deltaTime;
         }
 
-        
+        // 更新鏡頭位置，追蹤控制的物件
+        cameraTransform.position = controlledObject.transform.position + cameraOffset;
     }
 
     void PlayerInput()
@@ -82,15 +81,14 @@ public class GameControllerScripts : MonoBehaviour
                     PlayerJump(rb);
                     break;
                 case "Rabbit":
-
                     RabbitJump(rb);
                     break;
                 case "Bird":
                     //BirdJump(rb);
                     break;
-                // 可以在這裡添加更多動物的跳躍行為
+                // 可以在這裡添加更多動物的跳跃行為
                 default:
-                    Debug.Log("未知動物，無法跳躍");
+                    Debug.Log("未知動物，無法跳跃");
                     break;
             }
         }
@@ -121,31 +119,26 @@ public class GameControllerScripts : MonoBehaviour
         // 檢查被碰撞物體的標籤是否是 "Animal"
         if (collidedObject.CompareTag("Animal") && collidedObject != controlledObject)
         {
-            Debug.Log("玩家碰到了動物物體：" + collidedObject.name);
+            Debug.Log("玩家碰到了動物物件：" + collidedObject.name);
             collidedAnimal = collidedObject;
             Debug.Log("當前儲存碰撞物體：" + collidedAnimal);
             switchTimer = switchCooldown; // 重置切換計時器
         }
-
-        
     }
 
     // 從玩家附身成動物或動物附身到動物
     private void SwitchToAnimal(GameObject animalObject)
     {
         controlledObject.GetComponent<Rigidbody2D>().velocity = Vector2.zero; // 重置當前控制對象的速度
-       
+
         if (controlledObject == playerObject) { playerObject.SetActive(false); } // 玩家隱藏，當玩家附身成動物
-        
+
         controlledObject = animalObject; // 動物附身到動物
         Debug.Log("附身到動物：" + controlledObject.name);
 
-        if (collidedAnimal !=null)
+        if (collidedAnimal != null)
         {
-
             collidedAnimal = null;
-
-
         }
         animalSwitchTimer = animalSwitchCooldown; // 重置動物之間的切換冷卻計時器
     }
@@ -155,27 +148,22 @@ public class GameControllerScripts : MonoBehaviour
     {
         if (controlledObject.CompareTag("Animal") && Input.GetKeyDown(KeyCode.R))
         {
-
             Vector3 animalPosition = controlledObject.transform.position;
             Vector2 animalVelocity = controlledObject.GetComponent<Rigidbody2D>().velocity;
 
             playerObject.transform.position = animalPosition; // 更新玩家位置
             playerRb.velocity = animalVelocity; // 更新玩家動量
-            
+
             playerObject.SetActive(true); // 玩家顯示，當按 R 回復控制玩家
             controlledObject = playerObject; // 切換控制對象回玩家
 
             switchBackTimer = switchBackCooldown; // 重置切回玩家的冷卻計時器
 
-
             if (collidedAnimal != null)
             {
-
                 collidedAnimal = null;
-
-
             }
-            
+
             Debug.Log("控制切換回玩家：" + controlledObject.name);
         }
     }
@@ -183,13 +171,11 @@ public class GameControllerScripts : MonoBehaviour
     // 按T附身到動物
     private void AnimalSwitch()
     {
-
         if (collidedAnimal != null && Input.GetKeyDown(KeyCode.T) && switchBackTimer <= 0 && animalSwitchTimer <= 0 && switchTimer > 0)
         {
-
             SwitchToAnimal(collidedAnimal);
             collidedAnimal = null; // 重置碰撞的動物
-            
+
             animalSwitchTimer = animalSwitchCooldown; // 重置動物之間的切換冷卻計時器
         }
     }
@@ -198,7 +184,7 @@ public class GameControllerScripts : MonoBehaviour
         if (Mathf.Abs(rb.velocity.y) < 0.01f)
         {
             rb.AddForce(Vector2.up * playerJumpforce, ForceMode2D.Impulse);
-            Debug.Log("玩家跳躍");
+            Debug.Log("玩家跳跃");
         }
     }
 
@@ -206,29 +192,27 @@ public class GameControllerScripts : MonoBehaviour
     {
         if (controlledObject.name == "Rabbit" && Mathf.Abs(rb.velocity.y) < 0.01f)
         {
-            rabbitCanJump = true; // 允許再次跳躍
-            rabbitJumpCount = 0; // 重置跳躍次數
-            Debug.Log("兔子觸地，跳躍重置");
+            rabbitCanJump = true; // 允許再次跳跃
+            rabbitJumpCount = 0; // 重置跳跃次數
+            Debug.Log("兔子觸地，跳跃重置");
         }
 
-        // 判斷兔子是否可以跳躍
+        // 判斷兔子是否可以跳跃
         if (rabbitCanJump)
         {
-            if (rabbitJumpCount < 1) // 第一次跳躍
+            if (rabbitJumpCount < 1) // 第一次跳跃
             {
                 rb.AddForce(Vector2.up * rabbitJumpforce, ForceMode2D.Impulse);
                 rabbitJumpCount++;
-                Debug.Log("兔子第一次跳躍");
+                Debug.Log("兔子第一次跳跃");
             }
-            else if (rabbitJumpCount == 1 && Mathf.Abs(rb.velocity.y) > 0.01f) // 第二次跳躍（需要在空中）
+            else if (rabbitJumpCount == 1 && Mathf.Abs(rb.velocity.y) > 0.01f) // 第二次跳跃（需要在空中）
             {
                 rb.velocity = new Vector2(rb.velocity.x, 0); // 重置垂直速度
                 rb.AddForce(Vector2.up * rabbitJumpforce, ForceMode2D.Impulse);
                 rabbitJumpCount++;
-                Debug.Log("兔子第二次跳躍");
+                Debug.Log("兔子第二次跳跃");
             }
         }
     }
-
 }
-
