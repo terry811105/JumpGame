@@ -114,16 +114,18 @@ public class MapCreateManager : MonoBehaviour
                 
                 if (length > 0)
                 {
+                    // string row = fullMapData[y].Substring(startX, length);
+                    // // 在兩端都添加觸發器，支援雙向移動
+                    // if (i < totalSegments - 1 && length == segmentWidth)
+                    // {
+                    //     row = row.Substring(0, row.Length - 1) + "9";
+                    // }
+                    // if (i > 0 && length == segmentWidth)
+                    // {
+                    //     row = "9" + row.Substring(1);
+                    // }
+                    // segmentData[y] = row.PadRight(segmentWidth, '0');
                     string row = fullMapData[y].Substring(startX, length);
-                    // 在兩端都添加觸發器，支援雙向移動
-                    if (i < totalSegments - 1 && length == segmentWidth)
-                    {
-                        row = row.Substring(0, row.Length - 1) + "9";
-                    }
-                    if (i > 0 && length == segmentWidth)
-                    {
-                        row = "9" + row.Substring(1);
-                    }
                     segmentData[y] = row.PadRight(segmentWidth, '0');
                 }
                 else
@@ -213,6 +215,9 @@ public class MapCreateManager : MonoBehaviour
             segment.isLoaded = true;
             loadedSegments.Add(segmentIndex);
             ManageSegmentCache(segmentIndex);
+            Vector3Int triggerPosition = new Vector3Int(
+            (segmentIndex + 1) * segmentWidth - 1, 0, 0);
+            CreateTrigger(triggerPosition, segmentIndex);
         }
 
         var tilemapCollider = tilemap.GetComponent<TilemapCollider2D>();
@@ -253,18 +258,16 @@ public class MapCreateManager : MonoBehaviour
     void CreateTrigger(Vector3Int position, int segmentIndex)
     {
         GameObject trigger = new GameObject($"MapTrigger_{segmentIndex}");
-        trigger.transform.position = tilemap.GetCellCenterWorld(position);
-        
+        Vector3 tileWorldPos = tilemap.GetCellCenterWorld(new Vector3Int((segmentIndex + 1) * segmentWidth - 1, 0, 0));
+        trigger.transform.position = tileWorldPos;
+    
         BoxCollider2D collider = trigger.AddComponent<BoxCollider2D>();
         collider.isTrigger = true;
         collider.size = new Vector2(1f, tilemap.size.y);
-
-        Debug.Log($"Creating trigger for segment {segmentIndex}, position.x: {position.x}, triggersForward: {position.x < segmentIndex * segmentWidth}");
-        bool isTriggerAtEnd = position.x == (segmentIndex + 1) * segmentWidth - 1; // 判斷是否位於段落尾部
-        bool triggersForward = isTriggerAtEnd;
+    
         MapTrigger triggerScript = trigger.AddComponent<MapTrigger>();
-        triggerScript.Initialize(this, segmentIndex, triggersForward);
-
+        triggerScript.Initialize(this, segmentIndex, true);
+    
         mapSegments[segmentIndex].trigger = trigger;
     }
 
