@@ -25,7 +25,8 @@ public class GameControllerScripts : MonoBehaviour
     public Transform cameraTransform; // 鏡頭的引用
     public Vector3 cameraOffset = new Vector3(0, 0, -10); // 鏡頭與玩家的偏移
     public float cameraFollowSpeed = 2f; // 鏡頭追蹤的速度
-
+    public Vector2 cameraBoundsMin; // 鏡頭的最小邊界 (世界坐標)
+    public Vector2 cameraBoundsMax; // 鏡頭的最大邊界 (世界坐標)        
     void Start()
     {
         // 獲取玩家的 Rigidbody2D 和 Collider2D
@@ -69,6 +70,12 @@ public class GameControllerScripts : MonoBehaviour
 
         // 更新鏡頭位置，追蹤控制的物件
         Vector3 targetPosition = controlledObject.transform.position + cameraOffset;
+
+        // 限制鏡頭在邊界範圍內
+        targetPosition.x = Mathf.Clamp(targetPosition.x, cameraBoundsMin.x, cameraBoundsMax.x);
+        targetPosition.y = Mathf.Clamp(targetPosition.y, cameraBoundsMin.y, cameraBoundsMax.y);
+
+        // 平滑移動攝影機
         cameraTransform.position = Vector3.Lerp(cameraTransform.position, targetPosition, cameraFollowSpeed * Time.deltaTime);
     }
 
