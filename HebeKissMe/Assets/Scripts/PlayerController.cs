@@ -22,6 +22,10 @@ public class GameControllerScripts : MonoBehaviour
     public float playerJumpforce = 3f;
     public float rabbitJumpforce = 5f;
 
+    public GameObject currentKnockbackTarget = null; // 当前击退的目标
+    public float knockbackCooldown = 3f; // 击退冷却时间
+    public float knockbackTimer = 0f; // 击退计时器
+    public float knockbackForce = 5f;
     public Transform cameraTransform; // 鏡頭的引用
     public Vector3 cameraOffset = new Vector3(0, 0, -10); // 鏡頭與玩家的偏移
     public float cameraFollowSpeed = 2f; // 鏡頭追蹤的速度
@@ -68,6 +72,18 @@ public class GameControllerScripts : MonoBehaviour
             animalSwitchTimer -= Time.deltaTime;
         }
 
+        if (knockbackTimer > 0)
+        {
+            knockbackTimer -= Time.deltaTime;
+
+            // 冷却结束，清除击退目标
+            if (knockbackTimer <= 0)
+            {
+                currentKnockbackTarget = null;
+                Debug.Log("熊的击退冷却结束，可以再次击退目标");
+            }
+        }
+
         // 更新鏡頭位置，追蹤控制的物件
         Vector3 targetPosition = controlledObject.transform.position + cameraOffset;
 
@@ -92,8 +108,8 @@ public class GameControllerScripts : MonoBehaviour
                 case "Rabbit":
                     RabbitJump(rb);
                     break;
-                case "Bird":
-                    //BirdJump(rb);
+                case "Bear":
+                    Bearattack(rb);
                     break;
                 // 可以在這裡添加更多動物的跳跃行為
                 default:
@@ -224,5 +240,67 @@ public class GameControllerScripts : MonoBehaviour
             }
         }
     }
+
+    private void Bearattack(Rigidbody2D rb)
+    {
+        // 如果已经有目标，且在冷却时间内，不再处理新的目标
+        if (currentKnockbackTarget != null && knockbackTimer > 0)
+        {
+            Debug.Log("熊击退冷却中，无法重复击退");
+            return;
+        }
+
+        // 获取熊的碰撞器
+        Collider2D bearCollider = rb.GetComponent<Collider2D>();
+
+        if (bearCollider == null)
+        {
+            Debug.LogError("熊没有附加 Collider2D！");
+            return;
+        }
+
+        // 定义接触过滤器，排除 Ground 标签
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useTriggers = false; // 不检测触发器
+        filter.useLayerMask = false; // 不启用层级筛选
+
+        // 存储结果的容器
+        List<Collider2D> results = new List<Collider2D>();
+
+        // 检测碰触的对象
+        int contactCount = bearCollider.OverlapCollider(filter, results);
+
+        for (int i = 0; i < contactCount; i++)
+        {
+            Collider2D contact = results[i];
+
+            // 排除自身和地面
+            if (contact.gameObject != controlledObject && !contact.CompareTag("Ground"))
+            {
+                // 设置当前击退目标
+                currentKnockbackTarget = contact.gameObject;
+
+                // 获取目标的 Rigidbody2D
+                Rigidbody2D targetRb = contact.attachedRigidbody;
+
+                if (targetRb != null)
+                {
+                    // 计算击退方向
+                    Vector2 knockbackDirection = (contact.transform.position - rb.transform.position).normalized;
+
+                    // 施加击退力量
+                    targetRb.AddForce(knockbackDirection * knockbackForce, ForceMode2D.Impulse);
+
+                    Debug.Log($"熊击退了目标: {contact.name}");
+                }
+
+                // 启动冷却计时器
+                knockbackTimer = knockbackCooldown;
+                break; // 只处理一个目标
+            }
+        }
+    }
+
+
 }
 
