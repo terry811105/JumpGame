@@ -472,7 +472,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 4
+  m_Constraints: 0
 --- !u!114 &385389360
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -735,7 +735,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 4
+  m_Constraints: 0
 --- !u!114 &808497764
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -802,12 +802,18 @@ MonoBehaviour:
   switchBackTimer: 0
   animalSwitchCooldown: 3
   animalSwitchTimer: 0
+  rabbitCanJump: 1
+  rabbitJumpCount: 0
   playerJumpforce: 3
   rabbitJumpforce: 5
   currentKnockbackTarget: {fileID: 0}
   knockbackCooldown: 3
   knockbackTimer: 0
   knockbackForce: 5
+  dashDistance: 5
+  dashDuration: 3.59
+  isDashing: 0
+  localScaleX: 0
   cameraTransform: {fileID: 519420032}
   cameraOffset: {x: 0, y: 0, z: -10}
   cameraFollowSpeed: 2
@@ -908,7 +914,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
-  m_GravityScale: 5
+  m_GravityScale: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2

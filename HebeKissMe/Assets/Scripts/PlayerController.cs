@@ -4,33 +4,42 @@ using UnityEngine;
 
 public class GameControllerScripts : MonoBehaviour
 {
+    
     public GameObject playerObject; // 玩家物件的引用
     private Rigidbody2D playerRb;   // 玩家刚體
     private Collider2D playerCollider; // 玩家碰撞體
     public GameObject controlledObject; // 當前控制的物體
     public int hp = 0;
-    public GameObject collidedAnimal = null; // 當前碰撞的動物物件
-    public float switchCooldown = 1f; // 切換動物的時限
-    public float switchTimer = 0f; // 切換動物的計時器
-    public float switchBackCooldown = 3f; // 切換回玩家後的冷卻時間
-    public float switchBackTimer = 0f; // 切換回玩家的冷卻計時器
-    public float animalSwitchCooldown = 3f; // 動物之間切換的冷卻時間
-    public float animalSwitchTimer = 0f; // 動物之間切換的冷卻計時器
-
-    private bool rabbitCanJump = true; // 追蹤兔子是否可以跳跃
-    private int rabbitJumpCount = 0;   // 追蹤兔子跳跃次數
-    public float playerJumpforce = 3f;
-    public float rabbitJumpforce = 5f;
-
-    public GameObject currentKnockbackTarget = null; // 当前击退的目标
-    public float knockbackCooldown = 3f; // 击退冷却时间
-    public float knockbackTimer = 0f; // 击退计时器
-    public float knockbackForce = 5f;
-    public Transform cameraTransform; // 鏡頭的引用
-    public Vector3 cameraOffset = new Vector3(0, 0, -10); // 鏡頭與玩家的偏移
-    public float cameraFollowSpeed = 2f; // 鏡頭追蹤的速度
-    public Vector2 cameraBoundsMin; // 鏡頭的最小邊界 (世界坐標)
-    public Vector2 cameraBoundsMax; // 鏡頭的最大邊界 (世界坐標)        
+    [Header("Possessed Settings")]
+    [SerializeField] public GameObject collidedAnimal = null; // 當前碰撞的動物物件
+    [SerializeField] public float switchCooldown = 1f; // 切換動物的時限
+    [SerializeField] public float switchTimer = 0f; // 切換動物的計時器
+    [SerializeField] public float switchBackCooldown = 3f; // 切換回玩家後的冷卻時間
+    [SerializeField] public float switchBackTimer = 0f; // 切換回玩家的冷卻計時器
+    [SerializeField] public float animalSwitchCooldown = 3f; // 動物之間切換的冷卻時間
+    [SerializeField] public float animalSwitchTimer = 0f; // 動物之間切換的冷卻計時器
+    [Header("Jump Settings")]
+    [SerializeField] private bool rabbitCanJump = true; // 追蹤兔子是否可以跳跃
+    [SerializeField] private int rabbitJumpCount = 0;   // 追蹤兔子跳跃次數
+    [SerializeField] public float playerJumpforce = 3f;
+    [SerializeField] public float rabbitJumpforce = 5f;
+    [Header("Knockout Settings")]
+    [SerializeField] public GameObject currentKnockbackTarget = null; // 当前击退的目标
+    [SerializeField] public float knockbackCooldown = 3f; // 击退冷却时间
+    [SerializeField] public float knockbackTimer = 0f; // 击退计时器
+    [SerializeField] public float knockbackForce = 5f;
+    [Header("Dash Settings")]
+    [SerializeField] public float dashDistance = 5f; // 冲刺的距离
+    [SerializeField] public float dashDuration = 0.2f; // 冲刺持续时间
+    [SerializeField] public bool isDashing; // 是否正在冲刺
+    [SerializeField] public float localScaleX;
+   
+    [Header("Camera Settings")]
+    [SerializeField] public Transform cameraTransform; // 鏡頭的引用
+    [SerializeField] public Vector3 cameraOffset = new Vector3(0, 0, -10); // 鏡頭與玩家的偏移
+    [SerializeField] public float cameraFollowSpeed = 2f; // 鏡頭追蹤的速度
+    [SerializeField] public Vector2 cameraBoundsMin; // 鏡頭的最小邊界 (世界坐標)
+    [SerializeField]public Vector2 cameraBoundsMax; // 鏡頭的最大邊界 (世界坐標)        
     void Start()
     {
         // 獲取玩家的 Rigidbody2D 和 Collider2D
@@ -41,6 +50,8 @@ public class GameControllerScripts : MonoBehaviour
 
     void Update()
     {
+        
+
         // 在 Update 中檢測玩家的操作和狀態
         PlayerInput();
         SwitchBacktoPlayer();
@@ -97,6 +108,15 @@ public class GameControllerScripts : MonoBehaviour
 
     void PlayerInput()
     {
+        if (Input.GetKey(KeyCode.RightArrow))
+        {
+            localScaleX = 1; // 角色朝右
+        }
+        else if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            localScaleX = -1; // 角色朝左
+        }
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             Rigidbody2D rb = controlledObject.GetComponent<Rigidbody2D>();
@@ -109,7 +129,7 @@ public class GameControllerScripts : MonoBehaviour
                     RabbitJump(rb);
                     break;
                 case "Bear":
-                    Bearattack(rb);
+                    HandleDash(rb); // 处理冲刺
                     break;
                 // 可以在這裡添加更多動物的跳跃行為
                 default:
@@ -121,9 +141,11 @@ public class GameControllerScripts : MonoBehaviour
 
     void FixedUpdate()
     {
-        // 檢測水平移動輸入
-        float horizontalInput = Input.GetAxis("Horizontal");
-        controlledObject.GetComponent<Rigidbody2D>().velocity = new Vector2(horizontalInput * 5f, controlledObject.GetComponent<Rigidbody2D>().velocity.y);
+        if (!isDashing) // 仅在不冲刺时处理正常移动
+        {
+            float horizontalInput = Input.GetAxis("Horizontal");
+            controlledObject.GetComponent<Rigidbody2D>().velocity = new Vector2(horizontalInput * 5f, controlledObject.GetComponent<Rigidbody2D>().velocity.y);
+        }
     }
 
     void OnEnable()
@@ -300,6 +322,50 @@ public class GameControllerScripts : MonoBehaviour
             }
         }
     }
+
+    private void HandleDash(Rigidbody2D rb)
+    {
+        if (isDashing) return;
+
+        isDashing = true;
+
+        // 根据方向键输入设置冲刺方向
+        float direction = 0;
+        if (Input.GetKey(KeyCode.RightArrow))
+        {
+            direction = 1; // 向右
+        }
+        else if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            direction = -1; // 向左
+        }
+
+        // 如果没有方向键输入，则不进行冲刺
+        if (direction == 0)
+        {
+            Debug.Log("没有检测到方向键输入，无法冲刺");
+            isDashing = false;
+            return;
+        }
+
+        Vector2 dashDirection = new Vector2(direction, 0);
+        rb.velocity = dashDirection * dashDistance;
+
+        Debug.Log($"冲刺方向: {dashDirection}, 速度: {rb.velocity}");
+
+        // 在冲刺持续时间后停止冲刺
+        Invoke("EndDash", dashDuration);
+    }
+
+    private void EndDash()
+    {
+        isDashing = false;
+        Debug.Log("冲刺结束");
+    }
+
+
+
+
 
 
 }
