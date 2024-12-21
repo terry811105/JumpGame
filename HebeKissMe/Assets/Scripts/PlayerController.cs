@@ -29,7 +29,7 @@ public class GameControllerScripts : MonoBehaviour
     [SerializeField] public float dashDuration = 0.2f; // 冲刺持续时间
     [SerializeField] public bool isDashing; // 是否正在冲刺
     [SerializeField] public float localScaleX;
-   
+    [SerializeField] float knockbackForce = 10f; // 击飞力度
     [Header("Camera Settings")]
     [SerializeField] public Transform cameraTransform; // 鏡頭的引用
     [SerializeField] public Vector3 cameraOffset = new Vector3(0, 0, -10); // 鏡頭與玩家的偏移
@@ -167,7 +167,7 @@ public class GameControllerScripts : MonoBehaviour
                 Vector2 knockbackDirection = (collidedObject.transform.position - playerOb.transform.position).normalized;
 
                 // 施加击飞力
-                float knockbackForce = 10f; // 击飞力度
+                
                 collidedRb.AddForce(knockbackDirection * knockbackForce, ForceMode2D.Impulse);
 
                 Debug.Log($"击飞目标: {collidedObject.name}, 力度: {knockbackForce}, 方向: {knockbackDirection}");
