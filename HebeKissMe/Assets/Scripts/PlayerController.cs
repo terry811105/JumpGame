@@ -23,11 +23,7 @@ public class GameControllerScripts : MonoBehaviour
     [SerializeField] private int rabbitJumpCount = 0;   // 追蹤兔子跳跃次數
     [SerializeField] public float playerJumpforce = 3f;
     [SerializeField] public float rabbitJumpforce = 5f;
-    [Header("Knockout Settings")]
-    [SerializeField] public GameObject currentKnockbackTarget = null; // 当前击退的目标
-    [SerializeField] public float knockbackCooldown = 3f; // 击退冷却时间
-    [SerializeField] public float knockbackTimer = 0f; // 击退计时器
-    [SerializeField] public float knockbackForce = 5f;
+   
     [Header("Dash Settings")]
     [SerializeField] public float dashDistance = 5f; // 冲刺的距离
     [SerializeField] public float dashDuration = 0.2f; // 冲刺持续时间
@@ -83,17 +79,7 @@ public class GameControllerScripts : MonoBehaviour
             animalSwitchTimer -= Time.deltaTime;
         }
 
-        if (knockbackTimer > 0)
-        {
-            knockbackTimer -= Time.deltaTime;
-
-            // 冷却结束，清除击退目标
-            if (knockbackTimer <= 0)
-            {
-                currentKnockbackTarget = null;
-                Debug.Log("熊的击退冷却结束，可以再次击退目标");
-            }
-        }
+        
 
         // 更新鏡頭位置，追蹤控制的物件
         Vector3 targetPosition = controlledObject.transform.position + cameraOffset;
@@ -130,6 +116,7 @@ public class GameControllerScripts : MonoBehaviour
                     break;
                 case "Bear":
                     HandleDash(rb); // 处理冲刺
+                    
                     break;
                 // 可以在這裡添加更多動物的跳跃行為
                 default:
@@ -170,6 +157,25 @@ public class GameControllerScripts : MonoBehaviour
             collidedAnimal = collidedObject;
             Debug.Log("當前儲存碰撞物體：" + collidedAnimal);
             switchTimer = switchCooldown; // 重置切換計時器
+        }
+        if (isDashing)
+        {
+            Rigidbody2D collidedRb = collidedObject.GetComponent<Rigidbody2D>();
+            if (collidedRb != null)
+            {
+                // 计算击飞方向（从玩家中心指向碰撞物体）
+                Vector2 knockbackDirection = (collidedObject.transform.position - playerOb.transform.position).normalized;
+
+                // 施加击飞力
+                float knockbackForce = 10f; // 击飞力度
+                collidedRb.AddForce(knockbackDirection * knockbackForce, ForceMode2D.Impulse);
+
+                Debug.Log($"击飞目标: {collidedObject.name}, 力度: {knockbackForce}, 方向: {knockbackDirection}");
+            }
+            else
+            {
+                Debug.Log($"目标 {collidedObject.name} 没有刚体，无法击飞");
+            }
         }
     }
 
@@ -263,65 +269,8 @@ public class GameControllerScripts : MonoBehaviour
         }
     }
 
-    private void Bearattack(Rigidbody2D rb)
-    {
-        // 如果已经有目标，且在冷却时间内，不再处理新的目标
-        if (currentKnockbackTarget != null && knockbackTimer > 0)
-        {
-            Debug.Log("熊击退冷却中，无法重复击退");
-            return;
-        }
-
-        // 获取熊的碰撞器
-        Collider2D bearCollider = rb.GetComponent<Collider2D>();
-
-        if (bearCollider == null)
-        {
-            Debug.LogError("熊没有附加 Collider2D！");
-            return;
-        }
-
-        // 定义接触过滤器，排除 Ground 标签
-        ContactFilter2D filter = new ContactFilter2D();
-        filter.useTriggers = false; // 不检测触发器
-        filter.useLayerMask = false; // 不启用层级筛选
-
-        // 存储结果的容器
-        List<Collider2D> results = new List<Collider2D>();
-
-        // 检测碰触的对象
-        int contactCount = bearCollider.OverlapCollider(filter, results);
-
-        for (int i = 0; i < contactCount; i++)
-        {
-            Collider2D contact = results[i];
-
-            // 排除自身和地面
-            if (contact.gameObject != controlledObject && !contact.CompareTag("Ground"))
-            {
-                // 设置当前击退目标
-                currentKnockbackTarget = contact.gameObject;
-
-                // 获取目标的 Rigidbody2D
-                Rigidbody2D targetRb = contact.attachedRigidbody;
-
-                if (targetRb != null)
-                {
-                    // 计算击退方向
-                    Vector2 knockbackDirection = (contact.transform.position - rb.transform.position).normalized;
-
-                    // 施加击退力量
-                    targetRb.AddForce(knockbackDirection * knockbackForce, ForceMode2D.Impulse);
-
-                    Debug.Log($"熊击退了目标: {contact.name}");
-                }
-
-                // 启动冷却计时器
-                knockbackTimer = knockbackCooldown;
-                break; // 只处理一个目标
-            }
-        }
-    }
+    
+    
 
     private void HandleDash(Rigidbody2D rb)
     {
@@ -362,6 +311,7 @@ public class GameControllerScripts : MonoBehaviour
         isDashing = false;
         Debug.Log("冲刺结束");
     }
+   
 
 
 
