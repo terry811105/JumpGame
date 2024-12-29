@@ -44,6 +44,7 @@ public class MapCreateManager : MonoBehaviour
     "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
     "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
 };
+    // 地圖段落資訊
     private Dictionary<int, MapSegment> mapSegments = new Dictionary<int, MapSegment>();
     private HashSet<int> loadedSegments = new HashSet<int>();
     private Queue<int> segmentCache = new Queue<int>();
@@ -73,9 +74,8 @@ public class MapCreateManager : MonoBehaviour
 
     void Start()
     {
-
+        LoadMapDataFromCSV("MapData");
         InitializeMap();
-
     }
 
     void InitializeMap()
@@ -94,6 +94,37 @@ public class MapCreateManager : MonoBehaviour
         foreach (var key in mapSegments.Keys)
         {
             Debug.Log("mapSegments contains key: " + key);
+        }
+    }
+
+    void LoadMapDataFromCSV(string fileName)
+    {
+        TextAsset csvFile = Resources.Load<TextAsset>(fileName);
+        if (csvFile == null)
+        {
+            Debug.LogError($"CSV file '{fileName}' not found in Resources folder.");
+            return;
+        }
+
+        string[] lines = csvFile.text.Split('\n');
+        List<string> mapDataList = new List<string>();
+
+        foreach (string line in lines)
+        {
+            if (!string.IsNullOrWhiteSpace(line))
+            {
+                // 移除行尾的換行符和多餘的空格
+                string trimmedLine = line.Trim();
+                // 確保每行沒有多餘的逗號
+                string cleanedLine = trimmedLine.Replace(",", "");
+                mapDataList.Add(cleanedLine);
+            }
+        }
+        Debug.Log($"mapDataList '{mapDataList}'");
+        fullMapData = mapDataList.ToArray();
+        foreach(string mapItem in fullMapData)
+        {
+            Debug.Log($"每行 mapItem '{mapItem}'");
         }
     }
 
@@ -223,11 +254,12 @@ public class MapCreateManager : MonoBehaviour
         checkMapSegmentIsLoaded();
     }
 
+    // 檢查地圖段落是否已經載入
     void checkMapSegmentIsLoaded()
     {
         foreach (var key in mapSegments.Keys)
         {
-            Debug.Log("確認是否載入 mapSegments contains key: " + key + ", isLoaded: " + mapSegments[key].isLoaded + " time: " + Time.time);
+            // Debug.Log("確認是否載入 mapSegments contains key: " + key + ", isLoaded: " + mapSegments[key].isLoaded + " time: " + Time.time);
         }
     }
 
@@ -276,7 +308,7 @@ public class MapCreateManager : MonoBehaviour
         // mapSegments[segmentIndex].trigger = trigger;
 
         GameObject trigger = new GameObject($"MapTrigger_{segmentIndex}");
-        Vector3 tileWorldPos = tilemap.GetCellCenterWorld(new Vector3Int((segmentIndex + 1) * segmentWidth, 0, 0));
+        Vector3 tileWorldPos = tilemap.GetCellCenterWorld(new Vector3Int((segmentIndex + 1) * segmentWidth - 1, 0, 0));
         trigger.transform.position = tileWorldPos;
 
         BoxCollider2D collider = trigger.AddComponent<BoxCollider2D>();
@@ -302,6 +334,7 @@ public class MapCreateManager : MonoBehaviour
     // 卸載指定段落
     void UnloadSegment(int segmentIndex)
     {
+        
         Debug.Log($"準備卸載 UnloadSegment | index: {segmentIndex}, ...... time: {Time.time}");
         
         // 如果該段落不存在或者未載入，則不進行卸載
@@ -346,7 +379,7 @@ public class MapCreateManager : MonoBehaviour
 
         if (mapSegments.ContainsKey(targetSegmentIndex) && !isTransitioning)
         {
-            Debug.Log("HandleSegmentTransition is work:, " + isTransitioning + ", contain:" + mapSegments.ContainsKey(targetSegmentIndex));
+            Debug.Log("HandleSegmentTransition is work:, " + isTransitioning + ", contain:" + mapSegments.ContainsKey(targetSegmentIndex) + $"time: {Time.time}");
             StartCoroutine(TransitionToSegment(targetSegmentIndex, movingForward));
         }
         else if (!mapSegments.ContainsKey(targetSegmentIndex))
@@ -362,6 +395,7 @@ public class MapCreateManager : MonoBehaviour
 
     IEnumerator TransitionToSegment(int newSegmentIndex, bool movingForward)
     {
+        Debug.Log($"載入目標段落 index: {newSegmentIndex}, 前: {movingForward}, time: {Time.time}");
         // 載入目標段落
         yield return StartCoroutine(LoadSegmentWithTransition(newSegmentIndex));
 
@@ -372,6 +406,7 @@ public class MapCreateManager : MonoBehaviour
         currentSegmentIndex = newSegmentIndex;
     }
 
+    // 偵測玩家進入觸發器
     public void OnTriggerStay2D(Collider2D other)
     {
         if (other.CompareTag("Player") && !isTransitioning)
