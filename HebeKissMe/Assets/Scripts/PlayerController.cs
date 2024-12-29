@@ -35,7 +35,7 @@ public class GameControllerScripts : MonoBehaviour
     [SerializeField] public Vector3 cameraOffset = new Vector3(0, 0, -10); // 鏡頭與玩家的偏移
     [SerializeField] public float cameraFollowSpeed = 2f; // 鏡頭追蹤的速度
     [SerializeField] public Vector2 cameraBoundsMin; // 鏡頭的最小邊界 (世界坐標)
-    [SerializeField]public Vector2 cameraBoundsMax; // 鏡頭的最大邊界 (世界坐標)        
+    [SerializeField] public Vector2 cameraBoundsMax; // 鏡頭的最大邊界 (世界坐標)        
     void Start()
     {
         // 獲取玩家的 Rigidbody2D 和 Collider2D
@@ -46,8 +46,8 @@ public class GameControllerScripts : MonoBehaviour
 
     void Update()
     {
-        
 
+       
         // 在 Update 中檢測玩家的操作和狀態
         PlayerInput();
         SwitchBacktoPlayer();
@@ -158,27 +158,54 @@ public class GameControllerScripts : MonoBehaviour
             Debug.Log("當前儲存碰撞物體：" + collidedAnimal);
             switchTimer = switchCooldown; // 重置切換計時器
         }
+        // 如果玩家處於衝刺狀態
         if (isDashing)
         {
             Rigidbody2D collidedRb = collidedObject.GetComponent<Rigidbody2D>();
             if (collidedRb != null)
             {
-                // 计算击飞方向（从玩家中心指向碰撞物体）
+                // 切換剛體為 Dynamic，允許擊飛
+                collidedRb.bodyType = RigidbodyType2D.Dynamic;
+
+                // 計算擊飛方向（從玩家中心指向碰撞物體）
                 Vector2 knockbackDirection = (collidedObject.transform.position - playerOb.transform.position).normalized;
 
-                // 施加击飞力
-                
+                // 施加擊飛力
                 collidedRb.AddForce(knockbackDirection * knockbackForce, ForceMode2D.Impulse);
 
-                Debug.Log($"击飞目标: {collidedObject.name}, 力度: {knockbackForce}, 方向: {knockbackDirection}");
+                Debug.Log($"擊飛目標: {collidedObject.name}, 力度: {knockbackForce}, 方向: {knockbackDirection}");
+
+                // 恢復 Kinematic 狀態
+                StartCoroutine(ResetToKinematic(collidedRb));
             }
             else
             {
-                Debug.Log($"目标 {collidedObject.name} 没有刚体，无法击飞");
+                Debug.Log($"目標 {collidedObject.name} 沒有剛體，無法擊飛");
+            }
+        }
+        else
+        {
+            // 如果玩家不是衝刺狀態，確保剛體保持靜止
+            Rigidbody2D collidedRb = collidedObject.GetComponent<Rigidbody2D>();
+            if (collidedRb != null)
+            {
+                collidedRb.velocity = Vector2.zero; // 阻止運動
+            }
+        }
+        void OnCollisionEnter2D(Collision2D collision)
+        {
+            Rigidbody2D rb = collision.rigidbody;
+            if (rb != null)
+            {
+                rb.velocity = Vector2.zero; // 阻止運動
             }
         }
     }
-
+    private IEnumerator ResetToKinematic(Rigidbody2D rb)
+    {
+        yield return new WaitForSeconds(0.2f); // 等待 0.2 秒
+        rb.bodyType = RigidbodyType2D.Kinematic; // 恢復靜止狀態
+    }
     // 從玩家附身成動物或動物附身到動物
     private void SwitchToAnimal(GameObject animalObject)
     {
